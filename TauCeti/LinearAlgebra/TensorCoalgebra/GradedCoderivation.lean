@@ -5,7 +5,6 @@ Authors: The Tau Ceti contributors
 -/
 module
 
-public import TauCeti.Algebra.BigOperators.Finset.Range
 public import TauCeti.Algebra.Module.GradedModule.Internal
 public import TauCeti.LinearAlgebra.TensorCoalgebra.Coderivation
 public import TauCeti.LinearAlgebra.Graded.LinearMap
@@ -60,6 +59,10 @@ by `isHomogeneous_gradedCoderiv` and `IsGradedCoderivation.isHomogeneous`.
   does `gradedCoderiv G F q`, independently of the twist parameter.
 * `TauCeti.ReducedTensorWords.gradedCoderivEquivTaylor`: the `q`-twisted coderivations form a
   submodule identified, through the letter components, with the maps from tensor words to letters.
+* `TauCeti.ReducedTensorWords.isGradedCoderivation_iff_of_even_sub`,
+  `TauCeti.ReducedTensorWords.gradedCoderiv_eq_of_even_sub`,
+  `TauCeti.ReducedTensorWords.gradedCoderivations_eq_of_even_sub`: the predicate, Taylor
+  expansion, and submodule depend only on the parity of `q`.
 
 ## References
 
@@ -108,7 +111,8 @@ private theorem ReducedTensorWords.gradedCoderivSummand_tprod (G : InternalGradi
       (fun i => (if i.val < p then koszulTwist G q else LinearMap.id) (x i)) p d =
       subword R x p d :=
     subword_congr R _ _ (by omega) (by omega) fun j hj ↦ by
-      simp [show ¬(p + j < p) from by omega]
+      have hjnp : ¬(p + j < p) := by omega
+      simp [hjnp]
   rw [gradedCoderivSummand, LinearMap.coe_comp, Function.comp_apply, gradedTwistFirst,
     PiTensorProduct.map_tprod, coderivSummand_tprod R F hd hpd, hsub]
   refine splice_congr R _ _ _ (by omega) (by omega) fun j hj ↦ ?_
@@ -190,21 +194,22 @@ theorem ReducedTensorWords.splice_twistedTuple_smul (G : InternalGrading R M) (q
         simp only [c, hjp, ite_true, twistedTuple_apply, Nat.zero_add, and_true]
         rw [ite_eq_left (Nat.zero_le j.val),
           koszulTwist_apply_of_mem G (hx ⟨j.val, by omega⟩) q]
-        simp [deg, show j.val < n from by omega]
+        have hjlt : j.val < n := by omega
+        simp [deg, hjlt]
       · rw [dite_eq_right hjp, dite_eq_right hjp]
         simp only [c, hjp, ite_false, one_smul, twistedTuple_apply, Nat.zero_add]
         by_cases hje : j.val = p
         · simp [hje]
-        · rw [dite_eq_right hje, dite_eq_right hje,
-            ite_eq_right (show ¬(0 ≤ j.val + d - 1 ∧ j.val + d - 1 < p) from by omega)]
+        · have hnot : ¬(0 ≤ j.val + d - 1 ∧ j.val + d - 1 < p) := by omega
+          rw [dite_eq_right hje, dite_eq_right hje, ite_eq_right hnot]
     rw [hletters, (PiTensorProduct.tprod R).map_smul_univ, map_smul]
     congr 1
     have hprod : ∏ j : Fin (n + 1 - d), c j =
         (((q * ∑ j ∈ Finset.range p, deg j).negOnePow : ℤ) : R) := by
+      have hlen : n + 1 - d = p + (1 + (n - p - d)) := by omega
       rw [Fin.prod_univ_eq_prod_range (f := fun k : ℕ =>
           if k < p then (((q * deg k).negOnePow : ℤ) : R) else 1),
-        show n + 1 - d = p + (1 + (n - p - d)) from by omega,
-        Finset.prod_range_add, Finset.prod_range_add, Finset.prod_range_one]
+        hlen, Finset.prod_range_add, Finset.prod_range_add, Finset.prod_range_one]
       have s1 : ∏ x ∈ Finset.range p,
           (if x < p then (((q * deg x).negOnePow : ℤ) : R) else 1) =
           ∏ x ∈ Finset.range p, (((q * deg x).negOnePow : ℤ) : R) :=
@@ -247,9 +252,10 @@ private theorem ReducedTensorWords.gradedCoderivSummand_tprod_of_eq (G : Interna
       intro j hj
       have hyj := hy ⟨j, hj⟩
       by_cases hj' : j < p
-      · simp [hj', hyj, show a ≤ a + j from by omega,
-          show a + j < a + p from by omega]
-      · simp [hj', hyj, show ¬(a + j < a + p) from by omega]
+      · have hmem : a ≤ a + j ∧ a + j < a + p := by omega
+        simp [hj', hyj, hmem.1, hmem.2]
+      · have hnmem : ¬(a + j < a + p) := by omega
+        simp [hj', hyj, hnmem]
     have hsub : subword R (twistedTuple G q x a p) (a + p) d = subword R x (a + p) d :=
       subword_congr R _ _ (by omega) (by omega) fun j hj ↦ by
         simp
@@ -344,10 +350,10 @@ theorem ReducedTensorWords.splice_mem_gradedPiece (G : InternalGrading R M) {n :
           if j.val < p then 𝒟 j.val else if j.val = p then E else 𝒟 (j.val + d - 1)) i =
         (∑ j ∈ Finset.range p, 𝒟 j) + E +
           ∑ j ∈ Finset.range (n - p - d), 𝒟 (p + d + j) := by
+      have hlen : n + 1 - d = p + (1 + (n - p - d)) := by omega
       rw [Fin.sum_univ_eq_sum_range
         (f := fun k : ℕ => if k < p then 𝒟 k else if k = p then E else 𝒟 (k + d - 1)),
-        show n + 1 - d = p + (1 + (n - p - d)) from by omega, Finset.sum_range_add,
-        Finset.sum_range_add, Finset.sum_range_one]
+        hlen, Finset.sum_range_add, Finset.sum_range_add, Finset.sum_range_one]
       have s1 : ∑ x ∈ Finset.range p,
           (if x < p then 𝒟 x else if x = p then E else 𝒟 (x + d - 1))
           = ∑ x ∈ Finset.range p, 𝒟 x :=
@@ -357,10 +363,11 @@ theorem ReducedTensorWords.splice_mem_gradedPiece (G : InternalGrading R M) {n :
             else if p + (1 + x) = p then E else 𝒟 (p + (1 + x) + d - 1))
           = ∑ x ∈ Finset.range (n - p - d), 𝒟 (p + d + x) :=
         Finset.sum_congr rfl fun j _ ↦ by
-          simp [show p + (1 + j) + d - 1 = p + d + j from by omega]
-      rw [s1, s2,
-        show (if p + 0 < p then 𝒟 (p + 0)
-            else if p + 0 = p then E else 𝒟 (p + 0 + d - 1)) = E from by simp]
+          have hidx : p + (1 + j) + d - 1 = p + d + j := by omega
+          simp [hidx]
+      have hmid : (if p + 0 < p then 𝒟 (p + 0)
+          else if p + 0 = p then E else 𝒟 (p + 0 + d - 1)) = E := by simp
+      rw [s1, s2, hmid]
       abel
     rw [splice_eq_of_tprod R x e hd hpd (by omega)]
     have step := mem_gradedPiece_of_tprod G (by omega)
@@ -508,7 +515,8 @@ private theorem map_twist_subword (G : InternalGrading R M) (q : ℤ) {n : ℕ}
     refine of_tprod_congr R M _ rfl fun j => ?_
     have hj := j.isLt
     simp only [twistedTuple_apply, Fin.val_cast]
-    rw [ite_eq_left (show a ≤ a + j.val ∧ a + j.val < a + b from by omega)]
+    have hmem : a ≤ a + j.val ∧ a + j.val < a + b := by omega
+    rw [ite_eq_left hmem]
 
 /-- A `q`-twisted graded coderivation of the reduced tensor coalgebra is determined by its letter
 component, that is by its composite with the projection onto single letters: two such coderivations
@@ -531,7 +539,8 @@ private theorem subword_twistedTuple_congr (G : InternalGrading R M) (q : ℤ) {
   refine subword_congr R (twistedTuple G q x 0 m) (twistedTuple G q x 0 c)
     (by omega) (by omega) fun j hj ↦ ?_
   simp only [twistedTuple_apply, Nat.zero_le, true_and, Nat.zero_add]
-  rw [ite_eq_left (show j < m from by omega), ite_eq_left hj]
+  have hjm : j < m := by omega
+  rw [ite_eq_left hjm, ite_eq_left hj]
 
 /-- The tuples `twistedTuple G q x 0 (c + p)` and `twistedTuple G q x c p` agree on every letter
 from position `c` onward, so splices acting on the letters at and after position `c` coincide. -/
@@ -543,9 +552,10 @@ private theorem splice_twistedTuple_congr (G : InternalGrading R M) (q : ℤ) {n
   simp only [twistedTuple_apply, Nat.zero_le, true_and, Nat.zero_add]
   by_cases hj' : j < p
   · have e2 : c ≤ c + j ∧ c + j < c + p := by omega
-    rw [ite_eq_left (show c + j < c + p from by omega), ite_eq_left e2]
+    rw [ite_eq_left e2.2, ite_eq_left e2]
   · have e2 : ¬(c ≤ c + j ∧ c + j < c + p) := by omega
-    rw [ite_eq_right (show ¬(c + j < c + p) from by omega), ite_eq_right e2]
+    have e2' : ¬(c + j < c + p) := by omega
+    rw [ite_eq_right e2', ite_eq_right e2]
 
 /-- The graded Taylor expansion of any linear map `F` from tensor words to letters is a
 `q`-twisted coderivation: the signed analogue of `isCoderivation_coderiv`.  The twist of the
@@ -745,7 +755,38 @@ theorem ReducedTensorWords.gradedCoderiv_zero (G : InternalGrading R M)
     (isCoderivation_coderiv R F)
     (by rw [letter_comp_gradedCoderiv, letter_comp_coderiv])
 
+/-! ### Parity of the twist parameter -/
 
+/-- The `q`-twisted co-Leibniz predicate depends only on the parity of `q`. -/
+theorem ReducedTensorWords.isGradedCoderivation_iff_of_even_sub (G : InternalGrading R M)
+    {q q' : ℤ} (h : Even (q - q'))
+    {b : ReducedTensorWords R M →ₗ[R] ReducedTensorWords R M} :
+    IsGradedCoderivation G q b ↔ IsGradedCoderivation G q' b := by
+  simp only [isGradedCoderivation_iff, InternalGrading.koszulTwist_eq_of_even_sub G h]
+
+/-- Adding `2` to the twist parameter does not change the co-Leibniz predicate. -/
+@[simp]
+theorem ReducedTensorWords.isGradedCoderivation_add_two (G : InternalGrading R M) {q : ℤ}
+    {b : ReducedTensorWords R M →ₗ[R] ReducedTensorWords R M} :
+    IsGradedCoderivation G (q + 2) b ↔ IsGradedCoderivation G q b :=
+  isGradedCoderivation_iff_of_even_sub G ⟨1, add_sub_cancel_left q 2⟩
+
+/-- The graded Taylor expansion depends only on the parity of the twist parameter. -/
+theorem ReducedTensorWords.gradedCoderiv_eq_of_even_sub (G : InternalGrading R M)
+    (F : ReducedTensorWords R M →ₗ[R] M) {q q' : ℤ} (h : Even (q - q')) :
+    gradedCoderiv G F q = gradedCoderiv G F q' :=
+  IsGradedCoderivation.eq_of_letter_comp_eq
+    (isGradedCoderivation_gradedCoderiv G F q)
+    ((isGradedCoderivation_iff_of_even_sub G h).mpr
+      (isGradedCoderivation_gradedCoderiv G F q'))
+    (by rw [letter_comp_gradedCoderiv, letter_comp_gradedCoderiv])
+
+/-- Adding `2` to the twist parameter does not change the graded Taylor expansion. -/
+@[simp]
+theorem ReducedTensorWords.gradedCoderiv_add_two (G : InternalGrading R M)
+    (F : ReducedTensorWords R M →ₗ[R] M) (q : ℤ) :
+    gradedCoderiv G F (q + 2) = gradedCoderiv G F q :=
+  gradedCoderiv_eq_of_even_sub G F ⟨1, add_sub_cancel_left q 2⟩
 
 /-! ### The submodule of graded coderivations -/
 
@@ -787,6 +828,18 @@ theorem ReducedTensorWords.mem_gradedCoderivations (G : InternalGrading R M) {q 
     {b : ReducedTensorWords R M →ₗ[R] ReducedTensorWords R M} :
     b ∈ gradedCoderivations G q ↔ IsGradedCoderivation G q b :=
   Iff.rfl
+
+/-- The submodule of `q`-twisted coderivations depends only on the parity of `q`. -/
+theorem ReducedTensorWords.gradedCoderivations_eq_of_even_sub (G : InternalGrading R M)
+    {q q' : ℤ} (h : Even (q - q')) : gradedCoderivations G q = gradedCoderivations G q' := by
+  ext b
+  simp [isGradedCoderivation_iff_of_even_sub G h]
+
+/-- Adding `2` to the twist parameter does not change the submodule of twisted coderivations. -/
+@[simp]
+theorem ReducedTensorWords.gradedCoderivations_add_two (G : InternalGrading R M) (q : ℤ) :
+    gradedCoderivations G (q + 2) = gradedCoderivations G q :=
+  gradedCoderivations_eq_of_even_sub G ⟨1, add_sub_cancel_left q 2⟩
 
 /-- The graded coderivation/Taylor correspondence: a `q`-twisted coderivation (the co-Leibniz
 condition, not a homogeneity hypothesis) is determined by its letter component, and every linear

@@ -83,12 +83,14 @@ theorem sum_range_add_add {N : Type*} [AddCommMonoid N] (g : ℕ → N) {p d n :
         ∑ j ∈ range (n - p - d), g (p + d + j) := by
   have s1 : ∑ j ∈ range n, g j =
       (∑ j ∈ range p, g j) + ∑ j ∈ range (n - p), g (p + j) := by
+    have hp : p ≤ n := Nat.le_of_add_right_le h
     have key := sum_range_add g p (n - p)
-    rwa [show p + (n - p) = n from Nat.add_sub_cancel' (show p ≤ n from by omega)] at key
+    rwa [Nat.add_sub_cancel' hp] at key
   have s2 : ∑ j ∈ range (n - p), g (p + j) =
       (∑ j ∈ range d, g (p + j)) + ∑ j ∈ range (n - p - d), g (p + d + j) := by
+    have hd : d ≤ n - p := Nat.le_sub_of_add_le (add_comm p d ▸ h)
     have key := sum_range_add (f := fun k : ℕ => g (p + k)) d (n - p - d)
-    rw [show d + (n - p - d) = n - p from by omega] at key
+    rw [Nat.add_sub_cancel' hd] at key
     refine key.trans ?_
     simp only [Nat.add_assoc]
   rw [s1, s2, ← add_assoc]

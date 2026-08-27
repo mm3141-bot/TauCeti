@@ -36,6 +36,8 @@ elements, and the letterwise tuple operation that applies it on a half-open inde
 * `TauCeti.InternalGrading.koszulTwist_apply_of_mem`: the twist acts by the Koszul scalar on
   each homogeneous piece.
 * `TauCeti.InternalGrading.koszulTwist_comp`: twists compose by adding the twist parameters.
+* `TauCeti.InternalGrading.koszulTwist_eq_of_even_sub`: the twist depends only on the parity of
+  its parameter.
 
 This is the first graded-module target in Layer 0 of the `DGAInfinity` roadmap.  Later files use
 Mathlib's decomposition API to define maps of nonzero degree, shifts, tensor-product gradings, and
@@ -99,9 +101,8 @@ noncomputable def InternalGrading.koszulTwist (G : InternalGrading R M) (q : ℤ
     (DirectSum.decomposeLinearEquiv (ℳ := G.piece)).toLinearMap
 
 /-- The tuple `x` with exactly the letters at positions in the half-open interval `[a, a + p)`
-Koszul-twisted.  Downstream, the Taylor summand collapsing the block of length `d` starting at
-`a + p` is supported on this tuple: the collapse carries the Koszul sign of moving the operation
-past those preceding letters, and twisting them is how that sign is encoded. -/
+Koszul-twisted.  This is the letterwise action of `koszulTwist G q` on a consecutive block, which
+records the Koszul sign of moving an operation of parameter `q` past those letters. -/
 noncomputable def InternalGrading.twistedTuple (G : InternalGrading R M) (q : ℤ) {n : ℕ}
     (x : Fin n → M) (a p : ℕ) : Fin n → M :=
   fun i => if a ≤ i.val ∧ i.val < a + p then koszulTwist G q (x i) else x i
@@ -166,6 +167,26 @@ theorem InternalGrading.koszulTwist_comp_self (G : InternalGrading R M) (q : ℤ
     rw [koszulTwist_apply_of_mem G hx (2 * q), mul_assoc, Int.negOnePow_two_mul]
     simp
   simpa [LinearMap.comp_apply] using this
+
+/-- An even twist parameter acts as the identity. -/
+theorem InternalGrading.koszulTwist_even (G : InternalGrading R M) {q : ℤ} (hq : Even q) :
+    koszulTwist G q = LinearMap.id := by
+  refine DirectSum.decompose_lhom_ext (ℳ := G.piece) fun e => ?_
+  ext x
+  have h := InternalGrading.koszulTwist_apply_of_mem G (Submodule.coe_mem x) q
+  rw [Int.negOnePow_even _ (hq.mul_right e)] at h
+  simpa using h
+
+/-- The Koszul twist depends only on the parity of its parameter. -/
+theorem InternalGrading.koszulTwist_eq_of_even_sub (G : InternalGrading R M) {q q' : ℤ}
+    (h : Even (q - q')) : koszulTwist G q = koszulTwist G q' := by
+  rw [← sub_add_cancel q q', ← koszulTwist_comp, koszulTwist_even G h, LinearMap.id_comp]
+
+/-- Adding `2` to the twist parameter does not change the operator. -/
+@[simp]
+theorem InternalGrading.koszulTwist_add_two (G : InternalGrading R M) (q : ℤ) :
+    koszulTwist G (q + 2) = koszulTwist G q :=
+  koszulTwist_eq_of_even_sub G ⟨1, add_sub_cancel_left q 2⟩
 
 /-- Evaluation of `twistedTuple` on an index inside the twisted interval `[a, a + p)`. -/
 @[simp]

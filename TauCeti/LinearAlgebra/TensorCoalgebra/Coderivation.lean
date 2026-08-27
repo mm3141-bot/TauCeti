@@ -240,7 +240,7 @@ theorem isCoderivation_iff {b : ReducedTensorWords R M →ₗ[R] ReducedTensorWo
 /-- Two endomorphisms agreeing on a submodule have the same twisted co-Leibniz term on tensors
 of two elements of that submodule, where an auxiliary twist `τ` acts on the left half of every
 cut before `b` is applied to the right half. -/
-theorem rTensor_add_lTensor_rTensor_congr
+private theorem rTensor_add_lTensor_rTensor_congr
     {b₁ b₂ τ : ReducedTensorWords R M →ₗ[R] ReducedTensorWords R M}
     (P : Submodule R (ReducedTensorWords R M)) (h : ∀ z ∈ P, b₁ z = b₂ z) (w : P ⊗[R] P) :
     LinearMap.rTensor (ReducedTensorWords R M) b₁ (TensorProduct.mapIncl P P w) +
