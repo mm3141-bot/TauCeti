@@ -11,6 +11,7 @@ public import Mathlib.GroupTheory.GroupAction.Quotient
 public import Mathlib.GroupTheory.Subgroup.Centralizer
 public import Mathlib.SetTheory.Cardinal.Finite
 public import Mathlib.Tactic.Group
+public import TauCeti.GroupTheory.Perm.Centralizer
 
 /-!
 # Permutation triples
@@ -501,31 +502,26 @@ theorem automorphismGroup_equivOppositeConvention (t : PermutationTriple n) :
     _ = t.automorphismGroup :=
       (automorphismGroup_eq_centralizer_monodromyGroup (t := t)).symm
 
-/-- An automorphism of a triple with pretransitive monodromy fixing a sheet is the identity. -/
+/-- An automorphism of a triple with pretransitive monodromy fixing a sheet is the identity.
+
+This is `TauCeti.Subgroup.eq_one_of_mem_centralizer_of_apply_eq` for the centralizer of a group of
+permutations. -/
 theorem eq_one_of_mem_automorphismGroup_of_apply_eq
     (ht : MulAction.IsPretransitive t.monodromyGroup (Fin n)) {τ : Perm (Fin n)}
     (hτ : τ ∈ t.automorphismGroup) {i : Fin n} (hi : τ i = i) : τ = 1 := by
-  have hcomm : ∀ g ∈ t.monodromyGroup, g * τ = τ * g :=
-    Subgroup.mem_centralizer_iff.mp
-      (automorphismGroup_eq_centralizer_monodromyGroup (t := t) ▸ hτ)
-  refine Equiv.ext fun j => ?_
-  obtain ⟨g, hg⟩ := ht.exists_smul_eq i j
-  have hgj : (g : Perm (Fin n)) i = j := hg
-  calc τ j = (τ * (g : Perm (Fin n))) i := by rw [Perm.mul_apply, hgj]
-    _ = ((g : Perm (Fin n)) * τ) i := by rw [hcomm _ g.2]
-    _ = j := by rw [Perm.mul_apply, hi, hgj]
-    _ = (1 : Perm (Fin n)) j := by rw [Perm.one_apply]
+  exact Subgroup.eq_one_of_mem_centralizer_of_apply_eq ht
+    (automorphismGroup_eq_centralizer_monodromyGroup (t := t) ▸ hτ) hi
 
 /-- The order of the automorphism group divides the degree when the monodromy action is
-pretransitive. -/
+pretransitive.
+
+This is `TauCeti.Subgroup.card_centralizer_dvd` for the centralizer of a group of permutations. -/
 theorem card_automorphismGroup_dvd
     (ht : MulAction.IsPretransitive t.monodromyGroup (Fin n)) :
     Nat.card t.automorphismGroup ∣ n := by
-  have hfree : ∀ i : Fin n, MulAction.stabilizer t.automorphismGroup i = ⊥ := by
-    intro i
-    refine eq_bot_iff.mpr fun τ hτ => ?_
-    rw [Subgroup.mem_bot, Subtype.ext_iff]
-    exact eq_one_of_mem_automorphismGroup_of_apply_eq ht τ.2 (i := i) hτ
+  have hfree : ∀ i : Fin n, MulAction.stabilizer t.automorphismGroup i = ⊥ := fun i => by
+    rw [automorphismGroup_eq_centralizer_monodromyGroup (t := t),
+      Subgroup.centralizer_stabilizer_eq_bot ht i]
   have hcard := Nat.card_congr (MulAction.selfEquivOrbitsQuotientProd hfree)
   rw [Nat.card_prod, Nat.card_eq_fintype_card, Fintype.card_fin] at hcard
   exact ⟨_, hcard.trans (mul_comm _ _)⟩
