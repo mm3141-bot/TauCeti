@@ -16,15 +16,18 @@ import TauCeti.FieldTheory.SquareClassGroup.Real
 # The spinor norm of a real quadratic form
 
 Over `ℝ` the square-class group `ℝˣ/(ℝˣ)²` has exactly two elements, by
-`TauCeti.eq_one_or_eq_squareClassHom_neg_one`, so the image of the spinor norm of a real quadratic
-form is read off the sign of a single reflection.
+`TauCeti.eq_one_or_eq_squareClassHom_neg_one`, so on `O(Q)` the image of the spinor norm is read
+off the sign of a single reflection. A reflection is never an element of `SO(Q)`, since it has
+determinant `-1`, so on `SO(Q)` the nontrivial class is instead witnessed by the product of a
+reflection in a vector of negative value with a reflection in a vector of positive value, which has
+determinant one.
 
 For a positive definite form every invertible value is a positive real number, hence a square, so
 `orthogonalSpinorNorm_eq_one_of_posDef` makes the orthogonal spinor norm trivial and
-`spinorNorm_eq_one_of_posDef` restricts it to `SO(Q)`. A negative definite form takes only negative
-values, so a reflection contributes the square class of `-1`, which is also the determinant square
-class of a reflection: the two maps agree, and the spinor norm on `SO(Q)` is trivial since every
-isometry of `SO(Q)` has determinant one.
+`spinorNorm_eq_one_of_posDef` restricts it to `SO(Q)`. A negative definite form takes negative
+values on every nonzero vector, so a reflection contributes the square class of `-1`, which is
+also the determinant square class of a reflection: the two maps agree, and the spinor norm on
+`SO(Q)` is trivial since every isometry of `SO(Q)` has determinant one.
 
 As soon as the form takes a negative value the spinor norm on `O(Q)` is surjective, and an
 indefinite form, which takes values of both signs, has surjective spinor norm on `SO(Q)` as well.
@@ -46,8 +49,10 @@ indefinite form, which takes values of both signs, has surjective spinor norm on
 Together the results describe the real square-class image of both spinor norms: on `O(Q)` it is
 trivial for a positive definite form, the determinant square class for a negative definite form,
 and everything as soon as the form takes a negative value, while on `SO(Q)` it is trivial for a
-definite form and everything for an indefinite form. The split by signature is the point: the
-image is not all square classes for a definite real form.
+definite form and everything for an indefinite form. The split by signature is the point: on
+`SO(Q)` the image of a definite form of positive dimension is not all square classes, whereas on
+`O(Q)` a negative definite form of positive dimension already has full image, because it takes a
+negative value.
 -/
 
 public section
@@ -94,6 +99,7 @@ private theorem orthogonalSpinorNorm_reflection_eq_one_of_pos (Q : QuadraticForm
 
 /-- The spinor norm of a positive definite real quadratic form is trivial on its special
 orthogonal group. -/
+@[simp]
 theorem spinorNorm_eq_one_of_posDef (Q : QuadraticForm ℝ V) (hQ : Q.PosDef) :
     spinorNorm Q hQ.anisotropic.nondegenerate = 1 := by
   refine MonoidHom.ext fun g ↦ ?_
@@ -102,6 +108,7 @@ theorem spinorNorm_eq_one_of_posDef (Q : QuadraticForm ℝ V) (hQ : Q.PosDef) :
 
 /-- For a negative definite real quadratic form the spinor norm on `O(Q)` is the square class of
 the determinant, which is trivial on the isometries of determinant one. -/
+@[simp]
 theorem orthogonalSpinorNorm_eq_orthogonalDetSquareClass_of_negDef (Q : QuadraticForm ℝ V)
     (hneg : (-Q).PosDef) :
     orthogonalSpinorNorm Q ((QuadraticMap.nondegenerate_neg Q).mp hneg.anisotropic.nondegenerate)
@@ -116,6 +123,7 @@ theorem orthogonalSpinorNorm_eq_orthogonalDetSquareClass_of_negDef (Q : Quadrati
 
 /-- The spinor norm of a negative definite real quadratic form is trivial on `SO(Q)`, where every
 isometry has determinant one. -/
+@[simp]
 theorem spinorNorm_eq_one_of_negDef (Q : QuadraticForm ℝ V) (hneg : (-Q).PosDef) :
     spinorNorm Q ((QuadraticMap.nondegenerate_neg Q).mp hneg.anisotropic.nondegenerate) = 1 := by
   let _ : Invertible (2 : ℝ) := invertibleOfNonzero two_ne_zero

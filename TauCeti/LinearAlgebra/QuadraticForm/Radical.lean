@@ -86,8 +86,7 @@ theorem nondegenerate_neg (Q : QuadraticMap R M P) :
     (-Q).Nondegenerate ↔ Q.Nondegenerate := by
   have hpolar : (-Q).polarBilin = -Q.polarBilin := by
     ext x y
-    simp only [polarBilin_apply_apply, neg_apply, LinearMap.neg_apply, polar]
-    abel
+    exact polar_neg Q x y
   have hker : (-Q).polarBilin.ker = Q.polarBilin.ker := by rw [hpolar, LinearMap.ker_neg]
   constructor
   · rintro ⟨h, hrank⟩
