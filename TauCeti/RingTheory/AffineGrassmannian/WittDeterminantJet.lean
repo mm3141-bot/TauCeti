@@ -10,7 +10,6 @@ public import Mathlib.RingTheory.Localization.Away.AdjoinRoot
 public import TauCeti.LinearAlgebra.Matrix.Determinant.Locus
 public import TauCeti.RingTheory.Perfect.Colimit
 public import TauCeti.RingTheory.WittVector.Truncated.Basic
-import Mathlib.RingTheory.WittVector.Domain
 import TauCeti.RingTheory.WittVector.Units
 
 /-!
