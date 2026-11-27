@@ -8,12 +8,15 @@ module
 public import Mathlib.Data.Int.CardIntervalMod
 
 /-!
-# An upper bound for the integers of an interval with given residue
+# Counting integers of an interval with given residue
 
 Mathlib's `Int.Ico_filter_modEq_card` counts the integers of `[a, b)` congruent to `v` modulo
 `r > 0` exactly, as a difference of two ceilings. For estimates, the useful consequence is the
 uniform bound `(b - a) / r + 1`, independent of the residue `v`: a box of side `L` in `ℤ^n`
 contains at most `(L / r + 1) ^ n` points of any one residue class modulo `r`.
+
+For an interval `(a, b]` with `a ≤ b` in an ordered field with floors, the count differs from
+`(b - a) / r` by strictly less than one, uniformly in both endpoints and the residue class.
 -/
 
 public section
@@ -39,5 +42,26 @@ theorem card_Ico_filter_modEq_le {r : ℤ} (hr : 0 < r) {a b : ℤ} (hab : a ≤
   have hsplit : ((b : ℚ) - a) / r = (b - v) / r - (a - v) / r := by ring
   push_cast
   linarith
+
+/-- The count of integers in `(a, b]` in any residue class modulo `r > 0` differs from
+the interval length divided by `r` by strictly less than one. -/
+theorem abs_card_Ioc_floor_filter_modEq_sub_lt_one {K : Type*} [Field K] [LinearOrder K]
+    [IsStrictOrderedRing K] [FloorRing K] {r : ℤ} (hr : 0 < r) {a b : K} (hab : a ≤ b) (v : ℤ) :
+    |(#{x ∈ Ioc ⌊a⌋ ⌊b⌋ | x ≡ v [ZMOD r]} : K) - (b - a) / r| < 1 := by
+  have hfloor (x : K) : ⌊(⌊x⌋ - v : ℚ) / r⌋ = ⌊(x - v) / r⌋ := by
+    rw [Int.floor_div_cast_of_nonneg hr.le, Int.floor_sub_intCast, Int.floor_intCast,
+      Int.floor_div_cast_of_nonneg hr.le, Int.floor_sub_intCast]
+  have hr' : 0 < (r : K) := Int.cast_pos.mpr hr
+  have hmono : (a - v) / (r : K) ≤ (b - v) / r :=
+    div_le_div_of_nonneg_right (sub_le_sub_right hab _) hr'.le
+  have hcard : ((#{x ∈ Ioc ⌊a⌋ ⌊b⌋ | x ≡ v [ZMOD r]} : ℕ) : ℤ) =
+      ⌊(b - v) / (r : K)⌋ - ⌊(a - v) / (r : K)⌋ := by
+    rw [Int.Ioc_filter_modEq_card _ _ hr, hfloor, hfloor,
+      max_eq_left (sub_nonneg.mpr (Int.floor_mono hmono))]
+  rw [← Int.cast_natCast, hcard, Int.cast_sub, abs_lt]
+  have hlength : (b - a) / (r : K) = (b - v) / r - (a - v) / r := by ring
+  constructor <;> linarith [Int.floor_le ((a - v) / (r : K)),
+    Int.lt_floor_add_one ((a - v) / (r : K)), Int.floor_le ((b - v) / (r : K)),
+    Int.lt_floor_add_one ((b - v) / (r : K))]
 
 end Int
